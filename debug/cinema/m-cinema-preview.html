@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>1.0.5</title>
+    <style>
+        .phone-border {
+            width: 320px;
+            height: 480px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -webkit-transform: translate3d(-50%, -50%, 0);
+            border: 5px solid #555555;
+            overflow: hidden;
+        }
+
+        .phone-border .page {
+            width: 100%;
+        }
+
+        .input-data {
+            color: darkblue;
+            font-size: 25px;
+            width: 320px;
+            height: 480px;
+            position: absolute;
+            top: 50%;
+            left: 70%;
+            -webkit-transform: translate3d(0, -50%, 0);
+        }
+
+        .play {
+            width: 100px;
+            height: 40px;
+            background: url("img/play.png") no-repeat center center;
+            background-size: auto 30px;
+            position: absolute;
+            left: 50%;
+            -webkit-transform: translate3d(-50%, 0, 0);
+            cursor: pointer;
+        }
+
+        .ready-border {
+            height: 480px;
+            width: 300px;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            -webkit-transform: translate3d(-200px, -50%, 0);
+            cursor: pointer;
+            -webkit-transition: .2s linear;
+        }
+
+        .ready-border:hover {
+            -webkit-transform: translate3d(0, -50%, 0);
+            -webkit-transition: .2s linear;
+        }
+
+        .ready {
+            height: 100%;
+            width: 200px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .ready .item {
+            height: 30px;
+            line-height: 30px;
+            color: #aaa;
+            font-family: "微软雅黑", sans-serif;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bolder;
+            background: #efefef;
+        }
+
+        .ready .item:hover {
+            color: black;
+        }
+
+        .msg-box {
+            position: absolute;
+            width: 151px;
+            left: 50%;
+            top: 50%;
+            -webkit-transform: translate3d(-50%, -50%, 0);
+            padding: 20px;
+            border-radius: 5px;
+            background-color: black;
+            color: #fff;
+            display: inline-block;
+            bottom: auto !important;
+            text-align: center;
+        }
+
+        .msg-box.remove {
+            display: none !important;
+        }
+
+        .hide {
+            display: none !important;
+        }
+
+        .time-border {
+            width: 300px;
+            height: 50px;
+            text-align: center;
+            font-size: 30px;
+            font-family: "微软雅黑", sans-serif;
+            position: absolute;
+            left: 50%;
+            -webkit-transform: translate3d(-50%, -200%, 0);
+        }
+
+        .time-border.show {
+            -webkit-transform: translate3d(-50%, 0, 0);
+            -webkit-transition: .3s ease-out;
+        }
+
+        .time {
+            width: 100px;
+            background: #effeff;
+            color: #f00;
+        }
+
+        .time-border span {
+            display: inline-block;
+            height: 50px;
+            line-height: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="play hide"></div>
+<div class="phone-border">
+    <img src="img/page2.jpg" class="page">
+</div>
+
+<div class="time-border"><span class="time s">--</span><span class="v">:</span><span class="time ms">---</span></div>
+
+<div class="ready-border">
+    <div class="ready"></div>
+</div>
+
+<textarea class="input-data hide"></textarea>
+
+<script src="../../lib/zach/client.js"></script>
+<script>
+    main( function () {
+
+        // api
+        var cinema = imports( "./m-cinema-parse.js" ),
+                object = imports( "object" ),
+                array = imports( "array" ),
+                $ = imports( "element" ),
+                css = imports( "css" ),
+                querySelector = document.querySelector.bind( document );
+
+
+        // dom
+        var phoneBorder = querySelector( ".phone-border" ),
+                inputDataArea = querySelector( ".input-data" ),
+                playBtn = querySelector( ".play" ),
+                page = querySelector( ".page" ),
+                time_s = querySelector( ".time-border .s" ),
+                time_ms = querySelector( ".time-border .ms" );
+
+        // 模拟数据
+        window.body = phoneBorder;
+        window.clientWidth = 320;
+        window.clientHeight = 480;
+
+
+        // 模拟操作
+        page.toCanvas = function () {
+            var canvas = document.createElement( "canvas" );
+            var naw = page.naturalWidth,
+                    w = clientWidth,
+                    h = clientHeight;
+            canvas.width = w;
+            canvas.height = h;
+            canvas.style.width = w + "px";
+            canvas.style.height = h + "px";
+            canvas.getContext( "2d" ).drawImage( this, 0, 0, naw, naw / w * h, 0, 0, w, h );
+            return canvas;
+        };
+
+
+        var handle = null;
+        var timerHandle = null;
+
+
+        playBtn.onclick = function () {
+            if ( inputDataArea.value.trim().length == 0 ) {
+                alert( "不能为空" );
+                return;
+            }
+            handle && handle.destroy();
+            handle = cinema.materialize( page, JSON.parse( inputDataArea.value ) );
+        };
+
+        function timer( duration, callback ) {
+            var s = (new Date()).getTime();
+            var id = setTimeout( function () {
+                var cha = (new Date()).getTime() - s;
+                if ( cha >= duration ) {
+                    time_s.innerText = duration / 1000 << 0;
+                    time_ms.innerText = duration % 1000;
+                    callback && callback();
+                }
+                else {
+                    time_s.innerText = cha / 1000 << 0;
+                    time_ms.innerText = cha % 1000;
+                    clearTimeout( id );
+                    id = setTimeout( arguments.callee, 10 );
+                }
+            }, 10 );
+            return {
+                destroy : function () {
+                    clearTimeout( id );
+                }
+            }
+        }
+
+        var timerBorder = querySelector( ".time-border" );
+        var readyBorder = querySelector( ".ready" );
+
+
+        var xhr = new XMLHttpRequest();
+        xhr.open( "get", "http://" + location.hostname + ":7474/get-cinema-list", true );
+        xhr.send();
+        xhr.onreadystatechange = function () {
+            if ( xhr.readyState == 4 && xhr.status == 200 ) {
+                console.log( JSON.parse( xhr.responseText ) );
+                array.foreach( JSON.parse( xhr.responseText ).message, function ( data, i ) {
+                    var item = $( "div", {classList : "item", innerHTML : i}, readyBorder );
+                    item.onclick = function () {
+                        timerBorder.classList.add( "show" );
+                        timerHandle && timerHandle.destroy();
+                        handle && handle.destroy();
+                        handle = cinema.materialize( page, JSON.parse( data.animate ) );
+                        timerHandle = timer( handle.duration );
+                    }
+                } );
+            }
+        };
+        xhr.onerror = function () {
+            alert( "网络或服务器出现故障" );
+        };
+
+
+    } );
+</script>
+</body>
+</html>

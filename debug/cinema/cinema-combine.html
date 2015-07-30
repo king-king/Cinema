@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        .radio-title {
+            height: 25px;
+            line-height: 25px;
+            font-weight: 700;
+            font-size: 23px;
+            margin-bottom: 10px;
+        }
+
+        .radio-border span {
+            margin-left: 5px;
+        }
+
+        .radio-option {
+            height: 24px;
+            line-height: 24px;
+        }
+
+        .phone-border {
+            width: 320px;
+            height: 480px;
+            border: 10px solid #555;
+            border-radius: 2px;
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            overflow: hidden;
+            -webkit-transform: translate3d(-50%, -50%, 0);
+        }
+
+        .phone-border img {
+            width: 100%;
+        }
+
+        .scene {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 60%;
+            width: 150px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 40px 0;
+        }
+
+        .filter {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 80%;
+            width: 150px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 40px 0;
+        }
+
+        .act {
+            width: 100px;
+            height: 50px;
+            line-height: 50px;
+            position: absolute;
+            top: 20px;
+            left: 20%;
+            font-size: 30px;
+            background: #fff;
+            border: 2px solid orange;
+            border-radius: 6px;
+            -webkit-user-select: none;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .custom {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 40%;
+            width: 170px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 40px 0;
+        }
+
+        .add, .remove, .finish {
+            width: 100%;
+            height: 30px;
+            line-height: 30px;
+            color: orangered;
+            text-align: center;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bolder;
+            -webkit-user-select: none;
+        }
+
+        .frame-border {
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .frame-border.err {
+            color: red !important;
+        }
+
+        .frame-border-line {
+            height: 25px;
+            line-height: 25px;
+        }
+
+        .frame-border-line input {
+            display: inline-block;
+            width: 50px;
+        }
+
+        .radio-option span {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="act">act</div>
+<div class="phone-border">
+    <img src="img/page.jpg">
+</div>
+<div class="custom">
+    <div class="radio-title">自定义</div>
+    <div class="add">＋添加帧</div>
+    <div class="remove">－删除帧</div>
+    <div class="finish">完成</div>
+</div>
+<div class="scene"></div>
+<div class="filter"></div>
+<script src="../../lib/zach/client.js"></script>
+<script>
+    main( function () {
+        // api
+        var debug = imports( "../debug.js" ),
+                widget = imports( "../widget" ),
+                $ = imports( "element" ),
+                ua = imports( "ua" ),
+                css = imports( "css" ),
+                cinema = imports( "./cinema.js" ),
+                object = imports( "object" ),
+                querySelector = document.querySelector.bind( document ),
+                querySelectorAll = document.querySelectorAll.bind( document );
+
+        // dom
+        var scene = querySelector( ".scene" ),
+                filter = querySelector( ".filter" ),
+                page = querySelector( ".phone-border img" ),
+                act = querySelector( ".act" ),
+                custom = querySelector( ".custom" ),
+                add = querySelector( ".add" ),
+                remove = querySelector( ".remove" ),
+                finish = querySelector( ".finish" );
+
+        // var
+        var Scene, Filter;
+
+        useBrowserConsole();
+
+        // global
+        window.body = document.querySelector( ".phone-border" );
+        window.clientWidth = 320;
+        window.clientHeight = 480;
+
+        page.toCanvas = function () {
+            var canvas = document.createElement( "canvas" );
+            var naw = page.naturalWidth,
+                    w = 320,
+                    h = 480;
+            canvas.width = w;
+            canvas.height = h;
+            canvas.style.width = w + "px";
+            canvas.style.height = h + "px";
+            canvas.getContext( "2d" ).drawImage( page, 0, 0, naw, naw / w * h, 0, 0, w, h );
+            return canvas;
+        };
+
+        function Radio( title, options, name, parent, onchange ) {
+            var border = $( "div", {
+                "classList" : "radio-border"
+            }, parent );
+            $( "div", {
+                "classList" : "radio-title",
+                innerHTML : title
+            }, border );
+            object.foreach( options, function ( key, option ) {
+                var swap = $( "div", {
+                    classList : "radio-option"
+                }, border );
+                var opt = $( "input", {
+                    type : "radio",
+                    name : name,
+                    value : option.value
+                }, swap );
+                $( "span", {
+                    innerHTML : option.text
+                }, swap );
+                opt.onclick = function () {
+                    var cur = border.querySelector( "input.check" );
+                    cur && cur.classList.remove( "checked" );
+                    cur && (cur.checked = false);
+                    opt.classList.add( "checked" );
+                    opt.checked = true;
+                    onchange( option.value );
+                }
+            } );
+            return border;
+
+        }
+
+        debug.loadData( {
+            dir : "cinema/config",
+            doOut : function ( pageData ) {
+                Radio( "镜头", pageData.scene, "scene", scene, function ( value ) {
+                    Scene = value;
+                } );
+                pageData.filter.push( {
+                    text : "无",
+                    value : null
+                } );
+                Radio( "滤镜", pageData.filter, "filter", filter, function ( value ) {
+                    Filter = value;
+                } );
+            }
+        }, function () {
+        } );
+
+
+        var handle;
+        act.onclick = function () {
+            if ( !Scene ) {
+                return;
+            }
+            handle && handle.remove();
+            handle = cinema.doCinema( page, Scene, Filter, function () {
+
+            } );
+        };
+
+        var arg = [
+            {
+                duration : 2,
+                x : "left",
+                y : "top",
+                opacity : 0,
+                scale : 2
+            },
+            {
+                duration : 2,
+                x : "right",
+                y : "top",
+                opacity : 1,
+                scale : 2
+            }
+        ];
+
+        add.onclick = function () {
+            var frameBorder = $( "div", {
+                classList : "frame-border"
+            }, custom );
+            var x = $( "div", {
+                classList : "frame-border-line",
+                innerHTML : "x:<select class='x'><option value='left'>left</option><option value='center'>center</option><option value='right'>right</option></select>"
+            }, frameBorder );
+            var y = $( "div", {
+                classList : "frame-border-line",
+                innerHTML : "y:<select class='y'><option value='top'>top</option><option value='middle'>middle</option><option value='bottom'>bottom</option></select>"
+            }, frameBorder );
+            var scale = $( "div", {
+                classList : "frame-border-line",
+                innerHTML : "scale:<input type='text' class='scale'>(>=1)"
+            }, frameBorder );
+            var opcity = $( "div", {
+                classList : "frame-border-line",
+                innerHTML : "opacity:<input type='text' class='opacity'>(0~1)"
+            }, frameBorder );
+            var duration = $( "div", {
+                classList : "frame-border-line",
+                innerHTML : "duration:<input type='text' class='duration'>s"
+            }, frameBorder );
+
+            var count = querySelectorAll( ".frame-border" ).length;
+            if ( count == 1 ) {
+                var du = duration.querySelector( "input" );
+                du.value = 0;
+                du.disabled = true;
+            }
+
+        };
+
+        remove.onclick = function () {
+            var frames = querySelectorAll( ".frame-border" );
+            frames.length && frames[frames.length - 1].parentNode.removeChild( frames[frames.length - 1] );
+        };
+
+        function loopArray( arr, callback ) {
+            for ( var i = 0; i < arr.length; i++ ) {
+                if ( callback( arr[i], i ) ) {
+                    break;
+                }
+            }
+        }
+
+        var customIndex = 0;
+
+        function removeAll( els ) {
+            loopArray( els, function ( el ) {
+                el.parentNode.removeChild( el );
+            } );
+        }
+
+        finish.onclick = function () {
+            var errBorder = querySelectorAll( ".frame-border.err" ),
+                    animateArg = [],
+                    frames = querySelectorAll( ".frame-border" ),
+                    isErr = false;
+            errBorder.length != 0 && loopArray( errBorder, function ( b ) {
+                b.classList.remove( "err" );
+            } );
+
+            if ( frames.length ) {
+                loopArray( frames, function ( el, i ) {
+                    var duration = parseInt( el.querySelector( ".duration" ).value ),
+                            x = el.querySelector( ".x" ).selectedOptions[0].value,
+                            y = el.querySelector( ".y" ).selectedOptions[0].value,
+                            opacity = parseInt( el.querySelector( ".opacity" ).value ),
+                            scale = parseInt( el.querySelector( ".scale" ).value );
+                    if ( scale < 1 || opacity > 1 || opacity < 0 ) {
+                        el.classList.add( "err" );
+                        isErr = true;
+                        return true;
+                    }
+                    if ( scale == 1 && (x != "center" || y != "middle") ) {
+                        el.classList.add( "err" );
+                        isErr = true;
+                        confirm( "如果要想移动，则scale必须大于1" );
+                        return true;
+                    }
+                    animateArg.push( {
+                        duration : duration,
+                        x : x,
+                        y : y,
+                        scale : scale,
+                        opacity : opacity
+                    } );
+                } );
+                if ( !isErr ) {
+                    var option = $( "div", {
+                        classList : "radio-option",
+                        innerHTML : "<input type='radio' name='scene'><span>自定义-" + customIndex + "</span>"
+                    }, querySelector( ".radio-border" ) );
+                    var span = option.querySelector( "span" );
+                    span.scene = cinema.constructAnimation( animateArg );
+                    var opt = option.querySelector( "input" );
+                    opt.onclick = function () {
+                        var cur = querySelector( ".scene input.check" );
+                        cur && cur.classList.remove( "checked" );
+                        cur && (cur.checked = false);
+                        opt.classList.add( "checked" );
+                        opt.checked = true;
+                        Scene = span.scene;
+                    };
+                    span.title = "打开查看配置";
+                    span.onclick = function () {
+                        var newwindow = window.open( "" );
+                        newwindow.document.write( JSON.stringify( span.scene ) );
+                    };
+                    removeAll( querySelectorAll( ".custom .frame-border" ) );
+                }
+
+            }
+
+        }
+    } );
+</script>
+</body>
+</html>
