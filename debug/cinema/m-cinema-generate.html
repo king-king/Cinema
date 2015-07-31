@@ -1032,7 +1032,6 @@
             document.body.classList.add( "show" );
         };
 
-
         function resetByData( data ) {
             // todo:这里的代码比较关键，依靠数据生成页面。目前这里的数据是手工输入，以后可能会添加从数据库获取的途径，处理的方法是一致的
             // 删掉现有的自定义组件
@@ -1116,8 +1115,8 @@
 
         };
 
-        var zuopinWall = null;
-
+        var zuopinWall = null,
+                actHandle = null;
 
         querySelector( ".change.top-btn" ).onclick = function () {
             if ( zuopinWall ) {
@@ -1216,8 +1215,6 @@
                 }
             }
         };
-
-        var actHandle = null;
 
         //　预览
         querySelector( ".act.top-btn" ).onclick = function () {
