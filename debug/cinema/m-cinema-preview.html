@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <title>1.0.5</title>
     <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+        }
+
         .phone-border {
             width: 320px;
             height: 480px;
@@ -19,6 +30,15 @@
             width: 100%;
         }
 
+        .input-data-border {
+            width: 320px;
+            background-color: #fafafa;
+            position: absolute;
+            right: 100px;
+            top: 0;
+            bottom: 0;
+        }
+
         .input-data {
             color: darkblue;
             font-size: 25px;
@@ -26,19 +46,40 @@
             height: 480px;
             position: absolute;
             top: 50%;
-            left: 70%;
-            -webkit-transform: translate3d(0, -50%, 0);
+            margin-top: -240px;
+            left: 0;
+            -webkit-transform: translate3d(0, -1000px, 0);
+            -webkit-transition: 0.6s cubic-bezier(.17, .67, .74, 1.37) 0.1s;
+        }
+
+        .input-data-border:hover .input-data {
+            -webkit-transform: translate3d(0, 0, 0);
+            -webkit-transition: 0.6s cubic-bezier(.17, .67, .74, 1.37);
         }
 
         .play {
-            width: 100px;
-            height: 40px;
-            background: url("img/play.png") no-repeat center center;
-            background-size: auto 30px;
+            width: 80px;
+            height: 50px;
             position: absolute;
             left: 50%;
-            -webkit-transform: translate3d(-50%, 0, 0);
+            top: 10px;
             cursor: pointer;
+            background: #fff url("img/play.png") no-repeat 35px center;
+            background-size: auto 20px;
+            border-radius: 20px;
+            -webkit-transform: translate3d(-50%, -1000px, 0);
+            -webkit-transition: 0.6s cubic-bezier(.17, .67, .7, 1.32);
+        }
+
+        .input-data-border:hover .play {
+            -webkit-transform: translate3d(-50%, 0, 0);
+            -webkit-transition: 0.6s cubic-bezier(.17, .67, .7, 1.32) 0.1s;
+        }
+
+        .input-data-border:hover .play:hover {
+            border: 1px solid #eee;
+            box-shadow: #efefef 0 0 10px inset;
+            -webkit-transition: none;
         }
 
         .ready-border {
@@ -88,11 +129,13 @@
             -webkit-transform: translate3d(-50%, -50%, 0);
             padding: 20px;
             border-radius: 5px;
-            background-color: black;
+            background-color: orangered;
             color: #fff;
+            font-weight: bolder;
             display: inline-block;
             bottom: auto !important;
             text-align: center;
+            font-family: "微软雅黑", sans-serif;
         }
 
         .msg-box.remove {
@@ -134,7 +177,6 @@
 </head>
 <body>
 
-<div class="play hide"></div>
 <div class="phone-border">
     <img src="img/page2.jpg" class="page">
 </div>
@@ -145,7 +187,11 @@
     <div class="ready"></div>
 </div>
 
-<textarea class="input-data hide"></textarea>
+<div class="input-data-border">
+    <div class="play"></div>
+    <textarea class="input-data"></textarea>
+</div>
+
 
 <script src="../../lib/zach/client.js"></script>
 <script>
@@ -198,8 +244,11 @@
                 alert( "不能为空" );
                 return;
             }
+            timerBorder.classList.add( "show" );
+            timerHandle && timerHandle.destroy();
             handle && handle.destroy();
             handle = cinema.materialize( page, JSON.parse( inputDataArea.value ) );
+            timerHandle = timer( handle.duration );
         };
 
         function timer( duration, callback ) {

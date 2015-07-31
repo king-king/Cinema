@@ -76,6 +76,17 @@ library( function () {
             process = 0;
         array.foreach( arg, function ( value, i ) {
             // x、y的数值如果是整数，就认为单位是px，如果有小数部分，就认为单位是%
+            array.foreach( ["x", "y"], function ( key ) {
+                if ( object.is.String( value[key] ) ) {
+                    try {
+                        var w = clientWidth, h = clientHeight;
+                        value[key] = eval( value[key] );
+                    }
+                    catch ( e ) {
+                        console.warn( "err~!动画帧中" + value[key] + "无法解析" );
+                    }
+                }
+            } );
             var scale = value.scale,
                 x = isFloat( value.x ) ? value.x * 100 + "%" : value.x + "px",
                 y = isFloat( value.y ) ? value.y * 100 + "%" : value.y + "px",
@@ -153,6 +164,19 @@ library( function () {
                 }
                 else {
                     // 剩下的就是纯粹的组件，用css的animation实现之
+                    array.foreach( ["x", "y", "h"], function ( key ) {
+                        if ( object.is.String( plugin[key] ) ) {
+                            try {
+                                var w = clientWidth, h = clientHeight;
+                                plugin[key] = eval( plugin[key] );
+                            }
+                            catch ( e ) {
+                                plugin[key] = 0;
+                                console.warn( plugin.name + "组件的" + key + "属性为:" + plugin[key] + " 无法解析" );
+                            }
+                        }
+                    } );
+
                     $( "img", {
                         css : {
                             height : plugin.h < 1 && plugin.h > -1 ? plugin.h * 100 + "%" : plugin.h + "px",

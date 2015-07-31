@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>4.0.3</title>
+    <title>5.0.0</title>
     <style>
         * {
             font-family: "微软雅黑", sans-serif;
@@ -789,13 +789,10 @@
                     };
                 }
                 else {
-                    css( img, {
-                        "left" : importData.x < 1 && importData.x > -1 ? importData.x * 100 + "%" : importData.x + "px",
-                        "top" : importData.y < 1 && importData.y > -1 ? importData.y * 100 + "%" : importData.y + "px",
-                        "height" : importData.h < 1 && importData.h > -1 ? importData.h * 100 + "%" : importData.h + "px",
-                        "opacity" : importData.opacity,
-                        "-webkit-transform" : "rotateZ(" + importData.rotate + "deg)"
-                    } );
+                    /*
+                     importData中的x、y、h可能是数字（旧数据导致的），也可能是字符串。
+                     如果是字符串的话，可能是这种情况"w-50"这种形式，所以判断一下，用eval函数取数据
+                     * */
                     _data[wid] = {
                         name : info.src,
                         delay : importData.delay,
@@ -806,6 +803,26 @@
                         opacity : importData.opacity,
                         frames : importData.frames
                     };
+                    array.foreach( ["x", "y", "h"], function ( key ) {
+                        if ( object.is.String( importData[key] ) ) {
+                            try {
+                                var w = clientWidth, h = clientHeight;
+                                importData[key] = eval( importData[key] );
+                                console.warn( "组件" + importData.name + "的" + key + "属性有误" );
+                            }
+                            catch ( e ) {
+                                importData[key] = 0;
+                            }
+                        }
+                    } );
+
+                    css( img, {
+                        "left" : importData.x < 1 && importData.x > -1 ? importData.x * 100 + "%" : importData.x + "px",
+                        "top" : importData.y < 1 && importData.y > -1 ? importData.y * 100 + "%" : importData.y + "px",
+                        "height" : importData.h < 1 && importData.h > -1 ? importData.h * 100 + "%" : importData.h + "px",
+                        "opacity" : importData.opacity,
+                        "-webkit-transform" : "rotateZ(" + importData.rotate + "deg)"
+                    } );
                 }
             }
             else {
@@ -938,18 +955,26 @@
                         curImg = querySelector( ".phone-border img.half-opacity" ),
                         curId = curItem.wid;
 
-                var data = parseFloat( this.value );
+                var h = clientHeight,
+                        w = clientWidth;   // 不可删除，在eval中使用到了
+
+                try {
+                    var data = eval( this.value );
+                }
+                catch ( e ) {
+                    data = null;
+                }
 
                 if ( this.parentNode.classList.contains( "x" ) ) {
-                    _data[curId].x = data;
+                    _data[curId].x = this.value;
                     curImg && css( curImg, {"left" : data < 1 && data > -1 ? data * 100 + "%" : data + "px"} );
                 }
                 else if ( this.parentNode.classList.contains( "y" ) ) {
-                    _data[curId].y = data;
+                    _data[curId].y = this.value;
                     curImg && css( curImg, {"top" : data < 1 && data > -1 ? data * 100 + "%" : data + "px"} );
                 }
                 else if ( this.parentNode.classList.contains( "h" ) ) {
-                    _data[curId].h = data;
+                    _data[curId].h = this.value;
                     curImg && css( curImg, {"height" : data < 1 && data > -1 ? data * 100 + "%" : data + "px"} );
                 }
                 else if ( this.parentNode.classList.contains( "delay" ) ) {
@@ -1002,8 +1027,8 @@
                 var frames = [];
                 array.foreach( frameBorder.querySelectorAll( ".frame-item" ), function ( item, i ) {
                     frames.push( {
-                        x : parseFloat( item.querySelector( ".x input" ).value ),
-                        y : parseFloat( item.querySelector( ".y input" ).value ),
+                        x : item.querySelector( ".x input" ).value,
+                        y : item.querySelector( ".y input" ).value,
                         scale : parseFloat( item.querySelector( ".scale input" ).value ),
                         opacity : parseFloat( item.querySelector( ".opacity input" ).value ),
                         duration : parseFloat( item.querySelector( ".duration input" ).value ),
