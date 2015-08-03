@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>5.0.1</title>
+    <title>5.0.2</title>
     <style>
         * {
             font-family: "微软雅黑", sans-serif;
@@ -482,7 +482,7 @@
     </div>
 
     <div class="add-plugin">
-        <div class="title">添加系统组件</div>
+        <div class="title">添加已有组件</div>
         <select class="plugins">
         </select>
     </div>
@@ -529,40 +529,6 @@
                 pageItem = querySelector( ".cur-plugin .page-item" ),
                 page = querySelector( ".page" );
 
-        // config data
-        var sysPlugin = [
-            {
-                title : "红色桃心",
-                notSupportAttr : [],
-                src : "r-heart"
-            },
-            {
-                title : "云彩",
-                notSupportAttr : [],
-                src : "plugin-cloud"
-            },
-            {
-                title : "花",
-                notSupportAttr : [],
-                src : "plugin-flower"
-            },
-            {
-                title : "桃心组动画",
-                notSupportAttr : ["x", "h", "rotate", "frames", "opacity", "filter"],
-                src : "plugin-hearts"
-            },
-            {
-                title : "蓝色气泡",
-                notSupportAttr : [],
-                src : "plugin-bluepoint"
-            }
-        ];
-
-        var _dataMap = {};
-
-        array.foreach( sysPlugin, function ( plugin ) {
-            _dataMap[plugin.src] = plugin;
-        } );
 
         // template
         var frameTemplate =
@@ -584,6 +550,59 @@
 
         // 当前作品名称，如果为空的话，在保存的时候需要起名字，如果不为空说明是修改。
         var curZuoPinName = null;
+
+
+        // config data
+        var sysPlugin = [
+            {
+                title : "桃心组动画",
+                notSupportAttr : ["x", "h", "rotate", "frames", "opacity", "filter"],
+                src : "plugin-hearts"
+            }
+        ];
+
+        var _dataMap = {};
+
+        // 首先获取已有的组件
+        (function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open( "get", "http://" + location.hostname + ":7474/get-plugin-list", true );
+            xhr.send();
+            xhr.onreadystatechange = function () {
+                if ( xhr.readyState == 4 && xhr.status == 200 ) {
+                    var data = JSON.parse( xhr.responseText ).message;
+                    array.foreach( data, function ( d ) {
+                        sysPlugin.push( {
+                            title : d.alias,
+                            notSupportAttr : [],
+                            src : d.name
+                        } )
+                    } );
+                    array.foreach( sysPlugin, function ( plugin ) {
+                        _dataMap[plugin.src] = plugin;
+                    } );
+
+                    // 设定添加系统组件
+                    array.foreach( sysPlugin, function ( plugin ) {
+                        var option = $( "option", {
+                            innerHTML : plugin.title,
+                            value : plugin.src
+                        }, systemPluginSelect );
+                        systemPluginSelect.onchange = function () {
+                            var name = systemPluginSelect.selectedOptions[0].innerHTML, curPlugin;
+                            for ( var i = 0; i < sysPlugin.length; i++ ) {
+                                if ( name == sysPlugin[i].title ) {
+                                    curPlugin = sysPlugin[i];
+                                    break;
+                                }
+                            }
+                            addPluginFunc( curPlugin );
+                        }
+                    } );
+                }
+            }
+        })();
+
 
         // 模拟操作
         page.toCanvas = function () {
@@ -921,24 +940,6 @@
                 };
             }
         };
-
-        // 设定添加系统组件
-        array.foreach( sysPlugin, function ( plugin ) {
-            var option = $( "option", {
-                innerHTML : plugin.title,
-                value : plugin.src
-            }, systemPluginSelect );
-            systemPluginSelect.onchange = function () {
-                var name = systemPluginSelect.selectedOptions[0].innerHTML, curPlugin;
-                for ( var i = 0; i < sysPlugin.length; i++ ) {
-                    if ( name == sysPlugin[i].title ) {
-                        curPlugin = sysPlugin[i];
-                        break;
-                    }
-                }
-                addPluginFunc( curPlugin );
-            }
-        } );
 
         // 调试组件属性
         (function () {

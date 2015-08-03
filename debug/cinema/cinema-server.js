@@ -49,7 +49,6 @@ MongoClient.connect( dburl, function ( err, db ) {
                 doGetCinemaList();
             }
 
-
             function doUploadPlugin() {
                 (new multiparty.Form()).parse( req, function ( err, fields, files ) {
                         res.writeHead( 200, {'Content-Type' : 'text/plain', "Access-Control-Allow-Origin" : "*"} );
