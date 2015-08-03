@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>5.0.0</title>
+    <title>5.0.1</title>
     <style>
         * {
             font-family: "微软雅黑", sans-serif;
@@ -1170,6 +1170,7 @@
                         if ( data.length == 0 ) {
                             alert( "你目前还没有其他作品，无法进行切换" );
                             document.body.removeChild( zuopinWall );
+                            zuopinWall = null;
                         }
                         else {
                             var border = $( "div", {
@@ -1202,6 +1203,7 @@
                             }, zuopinWall );
                             closeBtn.onclick = function () {
                                 document.body.removeChild( zuopinWall );
+                                zuopinWall = null;
                             };
                             array.foreach( data, function ( zp ) {
                                 setTimeout( function () {
