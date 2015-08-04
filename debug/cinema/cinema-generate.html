@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>5.0.2</title>
+    <title>5.0.4</title>
     <style>
         * {
             font-family: "微软雅黑", sans-serif;
@@ -273,6 +273,11 @@
             position: absolute;
         }
 
+        .phone-border .bubble-hearts {
+            bottom: 0;
+            top: auto !important;
+        }
+
         .half-opacity {
             opacity: 0.5 !important;
             border: 2px solid deepskyblue;
@@ -432,6 +437,52 @@
                 -webkit-transform-origin: 50% 0;
             }
         }
+
+        .net-status {
+            position: absolute;
+            height: 30px;
+            width: 100px;
+            top: 10px;
+            right: 10px;
+            font-family: "微软雅黑", sans-serif;
+            font-size: 14px;
+        }
+
+        .net-status div {
+            float: left;
+        }
+
+        .net-status .light {
+            width: 10px;
+            height: 10px;
+            border-radius: 10px;
+            margin-top: 5px;
+            margin-right: 5px;
+        }
+
+        .net-status .online {
+            color: green;
+        }
+
+        .net-status.on-offline .online {
+            display: none;
+        }
+
+        .net-status .offline {
+            color: red;
+        }
+
+        .net-status.on-online .offline {
+            display: none;
+        }
+
+        .net-status.on-offline .light {
+            background-color: red;
+        }
+
+        .net-status.on-online .light {
+            background-color: green;
+        }
     </style>
 </head>
 <body>
@@ -441,6 +492,11 @@
 <div class="import-data top-btn" title="导入数据"></div>
 <div class="change top-btn" title="切换到其他"></div>
 
+<div class="net-status on-online">
+    <div class="light"></div>
+    <div class="online">在线</div>
+    <div class="offline">离线</div>
+</div>
 
 <div class="content-border">
     <div class="phone-border">
@@ -511,7 +567,7 @@
                 $ = imports( "element" ),
                 ua = imports( "ua" ),
                 css = imports( "css" ),
-                cinema = imports( "./m-cinema-parse.js" ),
+                cinema = imports( "./cinema-parse.js" ),
                 object = imports( "object" ),
                 array = imports( "array" ),
                 querySelector = document.querySelector.bind( document ),
@@ -527,7 +583,19 @@
                 downloadBtn = querySelector( ".download" ),
                 frameBorder = querySelector( ".frames-border" ),
                 pageItem = querySelector( ".cur-plugin .page-item" ),
-                page = querySelector( ".page" );
+                page = querySelector( ".page" ),
+                net_status = querySelector( ".net-status" );
+
+
+        window.addEventListener( "offline", function () {
+            net_status.classList.remove( "on-online" );
+            net_status.classList.add( "on-offline" );
+        }, false );
+
+        window.addEventListener( "online", function () {
+            net_status.classList.add( "on-online" );
+            net_status.classList.remove( "on-offline" );
+        }, false );
 
 
         // template
@@ -551,13 +619,17 @@
         // 当前作品名称，如果为空的话，在保存的时候需要起名字，如果不为空说明是修改。
         var curZuoPinName = null;
 
-
         // config data
         var sysPlugin = [
             {
                 title : "桃心组动画",
                 notSupportAttr : ["x", "h", "rotate", "frames", "opacity", "filter"],
                 src : "plugin-hearts"
+            },
+            {
+                title : "冒桃心",
+                notSupportAttr : ["x", "h", "y", "rotate", "frames", "opacity", "filter"],
+                src : "bubble-hearts"
             }
         ];
 
@@ -748,7 +820,7 @@
             var img;
             if ( !importData || importData.name != "page" ) {
                 img = $( "img", {
-                    classList : ["custom-plugin", "half-opacity"],
+                    classList : ["custom-plugin", "half-opacity", info.src || importData.name],
                     src : (info && "img/plugin/" + info.src + ".png" ) || window.URL.createObjectURL( inputFile.files[0] )
                 }, body );
                 item = $( "div", {
@@ -1061,14 +1133,14 @@
         function resetByData( data ) {
             // todo:这里的代码比较关键，依靠数据生成页面。目前这里的数据是手工输入，以后可能会添加从数据库获取的途径，处理的方法是一致的
             // 删掉现有的自定义组件
-            var customPlugins = querySelectorAll( "custom-plugin" );
+            var customPlugins = querySelectorAll( ".custom-plugin" );
             customPlugins && array.foreach( customPlugins, function ( plugin ) {
                 plugin.parentNode.removeChild( plugin );
             } );
             window._data = data;
             array.foreach( querySelectorAll( ".cur-plugin > .item" ), function ( item ) {
                 if ( !item.classList.contains( "title" ) && !item.classList.contains( "page-item" ) ) {
-                    pluginsBorder.remove( item );
+                    pluginsBorder.removeChild( item );
                 }
             } );
             //  生成item和page上的组件
@@ -1166,7 +1238,6 @@
                 xhr.send();
                 xhr.onreadystatechange = function () {
                     if ( xhr.readyState == 4 && xhr.status == 200 ) {
-                        console.log( JSON.parse( xhr.responseText ) );
                         var data = JSON.parse( xhr.responseText ).message;
                         if ( data.length == 0 ) {
                             alert( "你目前还没有其他作品，无法进行切换" );

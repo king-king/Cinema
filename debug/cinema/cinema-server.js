@@ -25,7 +25,6 @@ MongoClient.connect( dburl, function ( err, db ) {
             }
             // 得到组件列表
             else if ( req.url == "/get-plugin-list" ) {
-                console.log( "ok" );
                 doGetPluginList();
             }
             // 保存动画数据

@@ -11,7 +11,7 @@ library( function () {
         Img = imports( "../../src/img" ),
         object = imports( "object" ),
         array = imports( "array" ),
-        sysPlugin = imports( "./m-cinema-plugin.js" ),
+        sysPlugin = imports( "./cinema-plugin.js" ),
         cssAnimation = imports( "css-animation" );
 
     var Filter = {
@@ -106,6 +106,9 @@ library( function () {
         function getTimeSpend( plugin ) {
             if ( plugin.name == "plugin-hearts" ) {
                 return plugin.delay + 2;
+            }
+            else if ( plugin.name == "bubble-hearts" ) {
+                return plugin.delay + 5;
             }
             var duration = plugin.delay;
             array.foreach( plugin.frames, function ( frame ) {
