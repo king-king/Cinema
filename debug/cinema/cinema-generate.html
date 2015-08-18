@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>5.0.5</title>
+    <title>5.0.6</title>
     <style>
         * {
             font-family: "微软雅黑", sans-serif;
@@ -640,6 +640,10 @@
 
         querySelector( ".phone-border .page" ).onclick = function () {
             changePageFile.click();
+        };
+
+        changePageFile.onchange = function () {
+            page.src = window.URL.createObjectURL( changePageFile.files[0] );
         };
 
         // 首先获取已有的组件
