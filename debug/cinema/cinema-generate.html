@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>5.0.4</title>
+    <title>5.0.5</title>
     <style>
         * {
             font-family: "微软雅黑", sans-serif;
@@ -499,8 +499,9 @@
 </div>
 
 <div class="content-border">
+    <input type="file" class="content-border-file-input hide" accept=".png,.jpeg,.jpg">
     <div class="phone-border">
-        <img src="img/page2.jpg" class="page">
+        <img src="img/page2.jpg" class="page" style="cursor:pointer">
     </div>
 
     <!--显示当前页面中都有什么组件-->
@@ -634,6 +635,12 @@
         ];
 
         var _dataMap = {};
+
+        var changePageFile = querySelector( ".content-border-file-input" );
+
+        querySelector( ".phone-border .page" ).onclick = function () {
+            changePageFile.click();
+        };
 
         // 首先获取已有的组件
         (function () {
@@ -1002,6 +1009,9 @@
                         alert( data.message );
                         if ( data.code == 200 ) {
                             addPluginFunc( null, null, alias );
+                        }
+                        else {
+                            alert( data.message );
                         }
                     }
                 };
